@@ -503,15 +503,15 @@
             "version": "0.2"
         }, 
         {
-            "build_date": "2018-10-01_17:47:23", 
-            "changelog": "优化配置界面", 
+            "build_date": "2018-10-01_20:25:37", 
+            "changelog": "修复离线安装和主过滤模式BUG", 
             "description": "听说KP和软路由更搭哦~", 
             "home_url": "Module_koolproxy.asp", 
-            "md5": "92f41a2edcdba9fb0b5a9f2a5c844300", 
+            "md5": "577db6c48fc59d3e9202ca439ab8c687", 
             "name": "koolproxy", 
             "tar_url": "koolproxy/koolproxy.tar.gz", 
             "title": "koolproxy", 
-            "version": "3.8.3"
+            "version": "3.8.3.1"
         }, 
         {
             "build_date": "2017-10-09_22:23:58", 
