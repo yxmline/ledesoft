@@ -281,6 +281,9 @@ No part of this file may be used without permission.
 		function download_cert(){
 			location.href = "http://110.110.110.110";
 		}
+		function https_KP(){
+			window.open("https://koolproxy.io/docs/videos");			
+		}	
 		function join_QQ(){
 			window.open("//shang.qq.com/wpa/qunwpa?idkey=d6c8af54e6563126004324b5d8c58aa972e21e04ec6f007679458921587db9b0");
 		}
@@ -295,8 +298,9 @@ No part of this file may be used without permission.
 			var f = (E('_koolproxy_reboot').value == '1');
 			var g = (E('_koolproxy_reboot').value == '2');
 //			var h = (E('_koolproxy_mode').value == '2');
+//			var h = (E('_koolproxy_mode').value == '5');			
 			var x = (E('_koolproxy_port').value == '1');
-			var p = (E('_koolproxy_bp_port').value);
+			var p = (E('_koolproxy_bp_port').value);	
 			E('_koolproxy_mode').disabled = !a;
 			E('_koolproxy_port').disabled = !a			
 //			E('_koolproxy_bp_port').disabled = !a;
@@ -309,6 +313,7 @@ No part of this file may be used without permission.
 			elem.display('koolproxy_reboot_inter_hour_suf', a && g);
 			elem.display('koolproxy_reboot_inter_hour_pre', a && g);
 //			elem.display(PR('_koolproxy_host'), h);
+//			elem.display(PR('_koolproxy_port'), h);			
 			elem.display(PR('_koolproxy_bp_port'), x);
 		}
 		
@@ -551,8 +556,10 @@ No part of this file may be used without permission.
 					{ title: '开启Koolproxy', name:'koolproxy_enable',type:'checkbox',value: dbus.koolproxy_enable == 1 },
 					{ title: 'Koolproxy运行状态', text: '<font id="_koolproxy_status" name=_koolproxy_status color="#1bbf35">正在获取运行状态...</font>' },
 //					{ title: 'Koolproxy规则状态', text: '<font id="_koolproxy_rule_status" name=_koolproxy_status color="#1bbf35">正在获取规则状态...</font>' },
-					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
-					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0" },					
+//					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
+					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','黑名单模式'],['3','全端口模式']],value: dbus.koolproxy_mode || "1" },
+					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0", 
+					suffix: '<font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font>'},					
 					{ title: '例外端口', name:'koolproxy_bp_port',type:'text',style:'input_style', maxlen:20, value:dbus.koolproxy_bp_port ,suffix: '<font color="#FF0000">例：</font>&nbsp;&nbsp;<font color="#FF0000">【单端口】：80【多端口】：80,443</font>'},
 //					{ title: '开启Adblock Plus Host', name:'koolproxy_host',type:'checkbox',value: dbus.koolproxy_host == 1, suffix: '<lable id="_koolproxy_host_nu"></lable>' },
 					{ title: '插件自动重启', multi: [
@@ -560,7 +567,7 @@ No part of this file may be used without permission.
 						{ name: 'koolproxy_reboot_hour', type: 'select', options: option_reboot_hour, value: dbus.koolproxy_reboot_hour || "", suffix: '<lable id="koolproxy_reboot_hour_suf">重启</lable>', prefix: '<span id="koolproxy_reboot_hour_pre" class="help-block"><lable>每天</lable></span>' },
 						{ name: 'koolproxy_reboot_inter_hour', type: 'select', options: option_reboot_inter, value: dbus.koolproxy_reboot_inter_hour || "", suffix: '<lable id="koolproxy_reboot_inter_hour_suf">重启</lable>', prefix: '<span id="koolproxy_reboot_inter_hour_pre" class="help-block"><lable>每隔</lable></span>' }
 					] },
-					{ title: '证书下载', suffix: ' <button id="_download_cert" onclick="download_cert();" class="btn btn-danger">证书下载 <i class="icon-download"></i></button>&nbsp;&nbsp;<a class="kp_btn" href="https://koolproxy.io/docs/installation" target="_blank">【https过滤使用教程】<a>' },
+					{ title: '证书下载', suffix: ' <button id="_download_cert" onclick="download_cert();" class="btn btn-danger">证书下载 <i class="icon-download"></i></button>&nbsp;&nbsp;<button onclick="https_KP();" class="btn btn-success">HTTPS过滤教程</button>' },
 					{ title: 'KoolProxy交流', suffix: ' <button id="_join_QQ" onclick="join_QQ();" class="btn">加入QQ群</button>&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="join_KP();" class="btn">访问官网</button>&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="issues_KP();" class="btn btn-danger">问题反馈</button>' }
 				]);
 			</script>
@@ -571,9 +578,7 @@ No part of this file may be used without permission.
 	<div class="section content" id="sesdivnotes" style="display:">
 			<li><font color="#1bbf35">【不过滤】</font>不过滤任何设备，除非你在访问控制里另外设置过滤模式 </li>
 			<li><font color="#1bbf35">【全局模式】</font>只过滤80端口的流量并且是所有网站的流量都过滤。</li>
-			<li><font color="#1bbf35">【带HTTPS的全局模式】</font>只过滤80和443端口的流量并且是所有网站的流量都过滤。<font color="#FF0000">【安装证书】</font></li>
 			<li><font color="#1bbf35">【黑名单模式】</font>只过滤80端口流量并且是在黑名单内的网站流量。</li>
-			<li><font color="#1bbf35">【带HTTPS的黑名单模式】</font>只过滤80和443端口流量并且是在黑名单内的网站流量。<font color="#FF0000">【安装证书】</font></li>
 			<li><font color="#1bbf35">【全端口模式】</font>过滤包含80和443端口以外的所有端口流量并且是所有网站的流量都过滤。<font color="#FF0000">【安装证书】</font></li>
 			<li><font color="#FF0000">注意!</font>【全端口模式】需要更强大的性能作为过滤的保障。</li>
 	</div>
