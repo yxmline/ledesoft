@@ -30,7 +30,6 @@ mkdir -p $KSROOT/init.d
 mkdir -p $KSROOT/koolproxy/data
 cp -rf /tmp/koolproxy/scripts/* $KSROOT/scripts/
 cp -rf /tmp/koolproxy/webs/* $KSROOT/webs/
-cp -rf /tmp/koolproxy/res/* $KSROOT/res/
 cp -rf /tmp/koolproxy/init.d/* $KSROOT/init.d/
 if [ ! -f $KSROOT/koolproxy/data/rules/user.txt ];then
 	cp -rf /tmp/koolproxy/* $KSROOT/
