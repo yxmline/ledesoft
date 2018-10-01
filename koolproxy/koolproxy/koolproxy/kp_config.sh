@@ -56,10 +56,8 @@ start_koolproxy(){
 	[ ! -L "$KSROOT/bin/koolproxy" ] && ln -sf $KSROOT/koolproxy/koolproxy $KSROOT/bin/koolproxy
 	[ "$koolproxy_mode" == "0" ] && echo_date 选择【不过滤】	
 	[ "$koolproxy_mode" == "1" ] && echo_date 选择【全局模式】
-	[ "$koolproxy_mode" == "2" ] && echo_date 选择【带HTTPS的全局模式】
-	[ "$koolproxy_mode" == "3" ] && echo_date 选择【黑名单模式】
-	[ "$koolproxy_mode" == "4" ] && echo_date 选择【带HTTPS的黑名单模式】
-	[ "$koolproxy_mode" == "5" ] && echo_date 选择【全端口模式】
+	[ "$koolproxy_mode" == "2" ] && echo_date 选择【黑名单模式】
+	[ "$koolproxy_mode" == "3" ] && echo_date 选择【全端口模式】
 	[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
 	cd $KP_DIR && koolproxy --mark -d
 }
@@ -100,7 +98,7 @@ remove_nat_start(){
 # ===============================
 
 add_ipset_conf(){
-	if [ "$koolproxy_mode" == "3" -o "$koolproxy_mode" == "4" ];then
+	if [ "$koolproxy_mode" == "2" ];then
 		echo_date 添加黑名单软连接...
 		rm -rf /tmp/dnsmasq.d/koolproxy_ipset.conf
 		ln -sf $KP_DIR/data/koolproxy_ipset.conf /tmp/dnsmasq.d/koolproxy_ipset.conf
@@ -278,10 +276,9 @@ lan_acess_control(){
 			[ -n "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【$mac】模式为：$(get_mode_name $proxy_mode)
 			#echo iptables -t nat -A KOOLPROXY $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 			iptables -t nat -A KOOLPROXY $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
-		min=`expr $min + 1`
+			min=`expr $min + 1`
 		done
-		echo_date 加载ACL规则：其余主机模式为：$(get_mode_name $koolproxy_mode)
-		
+		echo_date 加载ACL规则：其余主机模式为：$(get_mode_name $koolproxy_mode)		
 	else
 		echo_date 加载ACL规则：所有模式为：$(get_mode_name $koolproxy_mode)
 	fi
@@ -340,7 +337,7 @@ dns_takeover(){
 	#chromecast=`iptables -t nat -L PREROUTING -v -n|grep "dpt:53"`
 	chromecast_nu=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53"|awk '{print $1}'`
 	is_right_lanip=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53" |grep "$lan_ipaddr"`
-	if [ "$koolproxy_mode" == "3" -o "$koolproxy_mode" == "4" ]; then
+	if [ "$koolproxy_mode" == "2" ]; then
 		if [ -z "$chromecast_nu" ]; then
 			echo_date 黑名单模式开启DNS劫持
 			iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
