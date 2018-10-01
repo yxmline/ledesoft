@@ -195,6 +195,23 @@ get_mode_name() {
 	esac
 }
 
+get_base_mode_name() {
+	case "$1" in
+		0)
+			echo "不过滤"
+		;;
+		1)
+			echo "全局模式"
+		;;
+		2)
+			echo "黑名单模式"
+		;;
+		3)
+			echo "全端口模式"
+		;;							
+	esac
+}
+
 get_jump_mode(){
 	case "$1" in
 		0)
@@ -224,6 +241,23 @@ get_action_chain() {
 			echo "KP_BLOCK_HTTPS"
 		;;				
 		5)
+			echo "KP_ALL_PORT"
+		;;		
+	esac
+}
+
+get_base_mode() {
+	case "$1" in
+		0)
+			echo "RETURN"
+		;;
+		1)
+			echo "KP_HTTP"
+		;;
+		2)
+			echo "KP_BLOCK_HTTP"
+		;;				
+		3)
 			echo "KP_ALL_PORT"
 		;;		
 	esac
@@ -278,9 +312,9 @@ lan_acess_control(){
 			iptables -t nat -A KOOLPROXY $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 			min=`expr $min + 1`
 		done
-		echo_date 加载ACL规则：其余主机模式为：$(get_mode_name $koolproxy_mode)		
+		echo_date 加载ACL规则：其余主机模式为：$(get_base_mode_name $koolproxy_mode)		
 	else
-		echo_date 加载ACL规则：所有模式为：$(get_mode_name $koolproxy_mode)
+		echo_date 加载ACL规则：所有模式为：$(get_base_mode_name $koolproxy_mode)
 	fi
 
 }
@@ -314,7 +348,7 @@ load_nat(){
 	# 局域网控制
 	lan_acess_control
 	# 剩余流量转发到缺省规则定义的链中
-	iptables -t nat -A KOOLPROXY -p tcp -j $(get_action_chain $koolproxy_mode)
+	iptables -t nat -A KOOLPROXY -p tcp -j $(get_base_mode $koolproxy_mode)
 	# 重定所有流量到 KOOLPROXY
 	# 全局模式和视频模式
 	PR_NU=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/prerouting_rule/='`
