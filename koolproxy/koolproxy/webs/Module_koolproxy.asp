@@ -298,14 +298,18 @@ No part of this file may be used without permission.
 			var f = (E('_koolproxy_reboot').value == '1');
 			var g = (E('_koolproxy_reboot').value == '2');
 //			var h = (E('_koolproxy_mode').value == '2');
-//			var h = (E('_koolproxy_mode').value == '5');			
+			var h = E('_koolproxy_mode_enable').checked;			
 			var x = (E('_koolproxy_port').value == '1');
-			var p = (E('_koolproxy_bp_port').value);	
+			var p = (E('_koolproxy_bp_port').value);
+			E('_koolproxy_mode_enable').disabled = !a;		
 			E('_koolproxy_mode').disabled = !a;
-			E('_koolproxy_port').disabled = !a			
+			E('_koolproxy_base_mode').disabled = !a;		
+			E('_koolproxy_port').disabled = !a
 //			E('_koolproxy_bp_port').disabled = !a;
 			E('_koolproxy_reboot').disabled = !a;
 			E('_download_cert').disabled = !a;
+			elem.display(PR('_koolproxy_mode'), h);
+			elem.display(PR('_koolproxy_base_mode'), !h);			
 			elem.display('_koolproxy_reboot_hour', a && f);
 			elem.display('koolproxy_reboot_hour_suf', a && f);
 			elem.display('koolproxy_reboot_hour_pre', a && f);
@@ -313,10 +317,10 @@ No part of this file may be used without permission.
 			elem.display('koolproxy_reboot_inter_hour_suf', a && g);
 			elem.display('koolproxy_reboot_inter_hour_pre', a && g);
 //			elem.display(PR('_koolproxy_host'), h);
-//			elem.display(PR('_koolproxy_port'), h);			
+//			elem.display(PR('_koolproxy_port'), h);
 			elem.display(PR('_koolproxy_bp_port'), x);
 		}
-		
+
 		function tabSelect(obj){
 			var tableX = ['app1-server1-jb-tab','app3-server1-kz-tab','app4-server1-zdy-tab','app5-server1-zsgl-tab','app6-server1-gzgl-tab','app7-server1-rz-tab'];
 			var boxX = ['boxr1','boxr3','boxr4','boxr5','boxr6','boxr7'];
@@ -371,7 +375,9 @@ No part of this file may be used without permission.
 			verifyFields();
 			// collect basic data
 			dbus.koolproxy_enable = E('_koolproxy_enable').checked ? '1':'0';
+			dbus.koolproxy_mode_enable = E('_koolproxy_mode_enable').checked ? '1':'0';			
 //			dbus.koolproxy_host = E('_koolproxy_host').checked ? '1':'0';
+			dbus.koolproxy_base_mode = E('_koolproxy_base_mode').value;			
 			dbus.koolproxy_mode = E('_koolproxy_mode').value;
 			dbus.koolproxy_port = E('_koolproxy_port').value;
 			dbus.koolproxy_bp_port = E('_koolproxy_bp_port').value;
@@ -539,6 +545,26 @@ No part of this file may be used without permission.
 			<span id="msg" class="col-sm-9" style="margin-top:10px;width:700px">koolproxy是一款高效的修改和过滤流量包的软件，用于保护未成年人健康上网，并且支持https和IPV6！</span>
 		</div>	
 	</div>
+	<div class="box" style="margin-top: 0px;">
+		<div class="heading">
+		</div>
+		<div class="content">
+			<div id="koolproxy_switch_pannel" class="section" style="margin-top: -20px;"></div>
+			<script type="text/javascript">
+				$('#koolproxy_switch_pannel').forms([
+					{ title: '开启KoolProxy', name:'koolproxy_enable',type:'checkbox',value: dbus.koolproxy_enable == 1 }
+				]);
+			</script>
+			<hr />
+			<fieldset id="koolproxy_status_pannel">
+				<label class="col-sm-3 control-left-label" for="_undefined">KoolProxy运行状态</label>
+				<div class="col-sm-9" style="margin-top:2px">
+					<font id="_koolproxy_status" name="_koolproxy_status" color="#1bbf35">正在检查运行状态...</font>
+				</div>
+			</fieldset>
+		</div>
+	</div>	
+	<!-- ------------------ 标签页 --------------------- -->	
 	<ul class="nav nav-tabs">
 		<li><a href="javascript:void(0);" onclick="tabSelect('app1');" id="app1-server1-jb-tab" class="active"><i class="icon-system"></i> 基本设置</a></li>
 		<li><a href="javascript:void(0);" onclick="tabSelect('app3');" id="app3-server1-kz-tab"><i class="icon-tools"></i> 访问控制</a></li>		
@@ -548,18 +574,18 @@ No part of this file may be used without permission.
 		<li><a href="javascript:void(0);" onclick="tabSelect('app7');" id="app7-server1-rz-tab"><i class="icon-info"></i> 日志信息</a></li>
 	</ul>
 	<div class="box boxr1" style="margin-top: 0px;">
-		<div class="heading">基本设置</div>
 		<div class="content">
 			<div id="identification" class="section"></div>
 			<script type="text/javascript">
 				$('#identification').forms([
-					{ title: '开启Koolproxy', name:'koolproxy_enable',type:'checkbox',value: dbus.koolproxy_enable == 1 },
-					{ title: 'Koolproxy运行状态', text: '<font id="_koolproxy_status" name=_koolproxy_status color="#1bbf35">正在获取运行状态...</font>' },
+//					{ title: '开启Koolproxy', name:'koolproxy_enable',type:'checkbox',value: dbus.koolproxy_enable == 1 },
+//					{ title: 'Koolproxy运行状态', text: '<font id="_koolproxy_status" name=_koolproxy_status color="#1bbf35">正在获取运行状态...</font>' },
 //					{ title: 'Koolproxy规则状态', text: '<font id="_koolproxy_rule_status" name=_koolproxy_status color="#1bbf35">正在获取规则状态...</font>' },
-//					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
-					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','黑名单模式'],['3','全端口模式']],value: dbus.koolproxy_mode || "1" },
-					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0", 
-					suffix: '<font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font>'},					
+					{ title: '开启进阶模式', name:'koolproxy_mode_enable',type:'checkbox',value: dbus.koolproxy_mode_enable == 1 },
+					{ title: '过滤模式', name:'koolproxy_base_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','黑名单模式']],value: dbus.koolproxy_base_mode || "1" },
+					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
+					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0",
+					suffix: '<font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font>'},
 					{ title: '例外端口', name:'koolproxy_bp_port',type:'text',style:'input_style', maxlen:20, value:dbus.koolproxy_bp_port ,suffix: '<font color="#FF0000">例：</font>&nbsp;&nbsp;<font color="#FF0000">【单端口】：80【多端口】：80,443</font>'},
 //					{ title: '开启Adblock Plus Host', name:'koolproxy_host',type:'checkbox',value: dbus.koolproxy_host == 1, suffix: '<lable id="_koolproxy_host_nu"></lable>' },
 					{ title: '插件自动重启', multi: [
@@ -576,11 +602,14 @@ No part of this file may be used without permission.
 	<div id="kp_mode_readme" class="box boxr1" style="margin-top: 15px;">
 	<div class="heading">过滤模式说明： <a class="pull-right" data-toggle="tooltip" title="Hide/Show Notes" href="javascript:toggleVisibility('notes');"><span id="sesdivnotesshowhide"><i class="icon-chevron-up"></i></span></a></div>
 	<div class="section content" id="sesdivnotes" style="display:">
-			<li><font color="#1bbf35">【不过滤】</font>不过滤任何设备，除非你在访问控制里另外设置过滤模式 </li>
-			<li><font color="#1bbf35">【全局模式】</font>只过滤80端口的流量并且是所有网站的流量都过滤。</li>
-			<li><font color="#1bbf35">【黑名单模式】</font>只过滤80端口流量并且是在黑名单内的网站流量。</li>
-			<li><font color="#1bbf35">【全端口模式】</font>过滤包含80和443端口以外的所有端口流量并且是所有网站的流量都过滤。<font color="#FF0000">【安装证书】</font></li>
-			<li><font color="#FF0000">注意!</font>【全端口模式】需要更强大的性能作为过滤的保障。</li>
+			<li>【进阶模式】不推荐新手或者第一次使用KoolProxy的用户使用。</li>		
+			<li>【不过滤】不过滤任何设备，除非你在访问控制里另外设置过滤模式。</li>
+			<li>【全局模式】只过滤80端口的流量并且是所有网站的流量都过滤。</li>
+			<li>【带HTTPS的全局模式】只过滤80和443端口的流量并且是所有网站的流量都过滤。</li>
+			<li>【黑名单模式】只过滤80端口流量并且是在黑名单内的网站流量。</li>
+			<li>【带HTTPS的黑名单模式】只过滤80和443端口流量并且是在黑名单内的网站流量。</li>
+			<li>【全端口模式】过滤包含80和443端口以外的所有端口流量并且是所有网站的流量都过滤。</li>
+			<li>【全端口模式】需要更强大的性能作为过滤的保障。</li>
 	</div>
 	</div>	
 	<div class="box boxr3">

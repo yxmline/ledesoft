@@ -54,11 +54,21 @@ start_koolproxy(){
 	load_rules
 	[ -f "$KSROOT/bin/koolproxy" ] && rm -rf $KSROOT/bin/koolproxy
 	[ ! -L "$KSROOT/bin/koolproxy" ] && ln -sf $KSROOT/koolproxy/koolproxy $KSROOT/bin/koolproxy
-	[ "$koolproxy_mode" == "0" ] && echo_date 选择【不过滤】	
-	[ "$koolproxy_mode" == "1" ] && echo_date 选择【全局模式】
-	[ "$koolproxy_mode" == "2" ] && echo_date 选择【黑名单模式】
-	[ "$koolproxy_mode" == "3" ] && echo_date 选择【全端口模式】
-	[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
+	if [ "$koolproxy_mode_enable" == "1" ]; then
+		echo_date 开启【进阶模式】
+		[ "$koolproxy_mode" == "0" ] && echo_date 选择【不过滤】
+		[ "$koolproxy_mode" == "1" ] && echo_date 选择【全局模式】
+		[ "$koolproxy_mode" == "2" ] && echo_date 选择【带HTTPS的全局模式】
+		[ "$koolproxy_mode" == "3" ] && echo_date 选择【黑名单模式】
+		[ "$koolproxy_mode" == "4" ] && echo_date 选择【带HTTPS的黑名单模式】
+		[ "$koolproxy_mode" == "5" ] && echo_date 选择【全端口模式】
+		[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
+	else
+		[ "$koolproxy_base_mode" == "0" ] && echo_date 选择【不过滤】	
+		[ "$koolproxy_base_mode" == "1" ] && echo_date 选择【全局模式】
+		[ "$koolproxy_base_mode" == "2" ] && echo_date 选择【黑名单模式】
+		[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
+	fi
 	cd $KP_DIR && koolproxy --mark -d
 }
 
@@ -98,11 +108,20 @@ remove_nat_start(){
 # ===============================
 
 add_ipset_conf(){
-	if [ "$koolproxy_mode" == "2" ];then
-		echo_date 添加黑名单软连接...
-		rm -rf /tmp/dnsmasq.d/koolproxy_ipset.conf
-		ln -sf $KP_DIR/data/koolproxy_ipset.conf /tmp/dnsmasq.d/koolproxy_ipset.conf
-		dnsmasq_restart=1
+	if [ "$koolproxy_mode_enable" == "1" ]; then
+		if [ "$koolproxy_mode" == "3" ];then
+			echo_date 添加黑名单软连接...
+			rm -rf /tmp/dnsmasq.d/koolproxy_ipset.conf
+			ln -sf $KP_DIR/data/koolproxy_ipset.conf /tmp/dnsmasq.d/koolproxy_ipset.conf
+			dnsmasq_restart=1
+		fi
+	else
+		if [ "$koolproxy_base_mode" == "2" ];then
+			echo_date 添加黑名单软连接...
+			rm -rf /tmp/dnsmasq.d/koolproxy_ipset.conf
+			ln -sf $KP_DIR/data/koolproxy_ipset.conf /tmp/dnsmasq.d/koolproxy_ipset.conf
+			dnsmasq_restart=1
+		fi		
 	fi
 }
 
@@ -205,9 +224,6 @@ get_base_mode_name() {
 		;;
 		2)
 			echo "黑名单模式"
-		;;
-		3)
-			echo "全端口模式"
 		;;							
 	esac
 }
@@ -256,10 +272,7 @@ get_base_mode() {
 		;;
 		2)
 			echo "KP_BLOCK_HTTP"
-		;;				
-		3)
-			echo "KP_ALL_PORT"
-		;;		
+		;;
 	esac
 }
 
@@ -312,11 +325,18 @@ lan_acess_control(){
 			iptables -t nat -A KOOLPROXY $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 			min=`expr $min + 1`
 		done
-		echo_date 加载ACL规则：其余主机模式为：$(get_base_mode_name $koolproxy_mode)		
+		if [ "$koolproxy_mode_enable" == "1" ]; then
+			echo_date 加载ACL规则：其余主机模式为：$(get_mode_name $koolproxy_mode)		
+		else
+			echo_date 加载ACL规则：其余主机模式为：$(get_base_mode_name $koolproxy_base_mode)
+		fi
 	else
-		echo_date 加载ACL规则：所有模式为：$(get_base_mode_name $koolproxy_mode)
+		if [ "$koolproxy_mode_enable" == "1" ]; then
+			echo_date 加载ACL规则：所有模式为：$(get_mode_name $koolproxy_mode)	
+		else
+			echo_date 加载ACL规则：所有模式为：$(get_base_mode_name $koolproxy_base_mode)
+		fi
 	fi
-
 }
 
 load_nat(){
@@ -348,7 +368,8 @@ load_nat(){
 	# 局域网控制
 	lan_acess_control
 	# 剩余流量转发到缺省规则定义的链中
-	iptables -t nat -A KOOLPROXY -p tcp -j $(get_base_mode $koolproxy_mode)
+	[ "$koolproxy_mode_enable" == "1" ] && iptables -t nat -A KOOLPROXY -p tcp -j $(get_action_chain $koolproxy_mode)
+	[ ! "$koolproxy_mode_enable" == "1" ] && iptables -t nat -A KOOLPROXY -p tcp -j $(get_base_mode $koolproxy_base_mode)
 	# 重定所有流量到 KOOLPROXY
 	# 全局模式和视频模式
 	PR_NU=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/prerouting_rule/='`
@@ -371,28 +392,52 @@ dns_takeover(){
 	#chromecast=`iptables -t nat -L PREROUTING -v -n|grep "dpt:53"`
 	chromecast_nu=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53"|awk '{print $1}'`
 	is_right_lanip=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53" |grep "$lan_ipaddr"`
-	if [ "$koolproxy_mode" == "2" ]; then
-		if [ -z "$chromecast_nu" ]; then
-			echo_date 黑名单模式开启DNS劫持
-			iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
-		else
-			if [ -z "$is_right_lanip" ]; then
+	if [ "$koolproxy_mode_enable" == "1" ]; then
+		if [ "$koolproxy_mode" == "3" ]; then
+			if [ -z "$chromecast_nu" ]; then
 				echo_date 黑名单模式开启DNS劫持
-				iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
 				iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
 			else
-				echo_date DNS劫持规则已经添加，跳过~
+				if [ -z "$is_right_lanip" ]; then
+					echo_date 黑名单模式开启DNS劫持
+					iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
+					iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
+				else
+					echo_date DNS劫持规则已经添加，跳过~
+				fi
 			fi
-		fi
-	else
-		if [ "$ss_chromecast" != "1" ] || [ "$ss_enable" -eq 0 ]; then
-			if [ -n "$chromecast_nu" ]; then
-				echo_date 全局过滤模式下删除DNS劫持
-				iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
+		else
+			if [ "$ss_chromecast" != "1" ] || [ "$ss_enable" -eq 0 ]; then
+				if [ -n "$chromecast_nu" ]; then
+					echo_date 全局过滤模式下删除DNS劫持
+					iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
+				fi
+			fi
+		fi	
+	else	
+		if [ "$koolproxy_base_mode" == "2" ]; then
+			if [ -z "$chromecast_nu" ]; then
+				echo_date 黑名单模式开启DNS劫持
+				iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
+			else
+				if [ -z "$is_right_lanip" ]; then
+					echo_date 黑名单模式开启DNS劫持
+					iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
+					iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
+				else
+					echo_date DNS劫持规则已经添加，跳过~
+				fi
+			fi
+		else
+			if [ "$ss_chromecast" != "1" ] || [ "$ss_enable" -eq 0 ]; then
+				if [ -n "$chromecast_nu" ]; then
+					echo_date 全局过滤模式下删除DNS劫持
+					iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
+				fi
 			fi
 		fi
 	fi
-}
+} 
 
 detect_cert(){
 	if [ ! -f $KP_DIR/data/private/ca.key.pem -o ! -f $KP_DIR/data/certs/ca.crt ]; then
