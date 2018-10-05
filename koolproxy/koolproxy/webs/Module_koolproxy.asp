@@ -126,9 +126,9 @@ No part of this file may be used without permission.
 			{ type: 'select',maxlen:50,options:option_arp_list },
 			{ type: 'text', maxlen: 50 },
 			{ type: 'text', maxlen: 50 },
-			{ type: 'select',maxlen:20,options:[['0', '不过滤'], ['1', '全局模式'], ['2', '带HTTPS的全局模式'], ['3', '黑名单模式'], ['4', '带HTTPS的黑名单模式'], ['5', '全端口模式']], value: '1'}
+			{ type: 'select',maxlen:20,options:[['0', '不过滤'], ['1', '全局模式'], ['2', '带HTTPS的全局模式'], ['3', '黑名单模式'], ['4', '带HTTPS的黑名单模式'], ['5', '全端口模式']], value: '1' }
 			] );
-			
+
 			this.headerSet( [ '主机别名', '主机IP地址', 'MAC地址', '过滤模式控制' ] );
 //			this.footerSet( [ '', '', '', ('')]);
 			if(typeof(dbus["koolproxy_acl_list"]) != "undefined" ){
@@ -137,9 +137,9 @@ No part of this file may be used without permission.
 				var s =""
 				return false;
 			}
-//			dbus.koolproxy_acl_default = E('_koolproxy_acl_default').value;
-//			if(typeof(dbus["koolproxy_acl_default"]) != "undefined" ){
-//				E("_koolproxy_acl_default").value = dbus["koolproxy_acl_default"];
+//			dbus.koolproxy_acl_mode = E('_koolproxy_acl_mode').value;
+//			if(typeof(dbus["koolproxy_acl_mode"]) != "undefined" ){
+//			E("_koolproxy_acl_mode").value = dbus["koolproxy_acl_mode"];
 //			}
 			for ( var i = 0; i < s.length; ++i ) {
 				var t = s[ i ].split( '<' );
@@ -298,8 +298,10 @@ No part of this file may be used without permission.
 			var f = (E('_koolproxy_reboot').value == '1');
 			var g = (E('_koolproxy_reboot').value == '2');
 //			var h = (E('_koolproxy_mode').value == '2');
-			var h = E('_koolproxy_mode_enable').checked;			
+			var h = (E('_koolproxy_mode_enable').value == '0');
+			var s = (E('_koolproxy_mode_enable').value == '1');			
 			var x = (E('_koolproxy_port').value == '1');
+//			var o = (E('_koolproxy_mode').value == '5');
 			var p = (E('_koolproxy_bp_port').value);
 			E('_koolproxy_mode_enable').disabled = !a;		
 			E('_koolproxy_mode').disabled = !a;
@@ -308,14 +310,15 @@ No part of this file may be used without permission.
 //			E('_koolproxy_bp_port').disabled = !a;
 			E('_koolproxy_reboot').disabled = !a;
 			E('_download_cert').disabled = !a;
-			elem.display(PR('_koolproxy_mode'), h);
-			elem.display(PR('_koolproxy_base_mode'), !h);			
+			elem.display(PR('_koolproxy_mode'), s);
+			elem.display(PR('_koolproxy_base_mode'), h);			
 			elem.display('_koolproxy_reboot_hour', a && f);
 			elem.display('koolproxy_reboot_hour_suf', a && f);
 			elem.display('koolproxy_reboot_hour_pre', a && f);
 			elem.display('_koolproxy_reboot_inter_hour', a && g);
 			elem.display('koolproxy_reboot_inter_hour_suf', a && g);
 			elem.display('koolproxy_reboot_inter_hour_pre', a && g);
+			elem.display('readme_port', x);
 //			elem.display(PR('_koolproxy_host'), h);
 //			elem.display(PR('_koolproxy_port'), h);
 			elem.display(PR('_koolproxy_bp_port'), x);
@@ -375,7 +378,7 @@ No part of this file may be used without permission.
 			verifyFields();
 			// collect basic data
 			dbus.koolproxy_enable = E('_koolproxy_enable').checked ? '1':'0';
-			dbus.koolproxy_mode_enable = E('_koolproxy_mode_enable').checked ? '1':'0';			
+			dbus.koolproxy_mode_enable = E('_koolproxy_mode_enable').value;			
 //			dbus.koolproxy_host = E('_koolproxy_host').checked ? '1':'0';
 			dbus.koolproxy_base_mode = E('_koolproxy_base_mode').value;			
 			dbus.koolproxy_mode = E('_koolproxy_mode').value;
@@ -533,7 +536,8 @@ No part of this file may be used without permission.
 		
 		function set_version() {
 			$('#_koolproxy_version').html('<font color="#1bbf35">KoolProxy</font>');
-		}	
+		}
+
 	</script>
 
 	<div class="box">
@@ -581,12 +585,12 @@ No part of this file may be used without permission.
 //					{ title: '开启Koolproxy', name:'koolproxy_enable',type:'checkbox',value: dbus.koolproxy_enable == 1 },
 //					{ title: 'Koolproxy运行状态', text: '<font id="_koolproxy_status" name=_koolproxy_status color="#1bbf35">正在获取运行状态...</font>' },
 //					{ title: 'Koolproxy规则状态', text: '<font id="_koolproxy_rule_status" name=_koolproxy_status color="#1bbf35">正在获取规则状态...</font>' },
-					{ title: '开启进阶模式', name:'koolproxy_mode_enable',type:'checkbox',value: dbus.koolproxy_mode_enable == 1 },
+					{ title: '开启进阶模式', name:'koolproxy_mode_enable',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_mode_enable || "0" },
 					{ title: '过滤模式', name:'koolproxy_base_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','黑名单模式']],value: dbus.koolproxy_base_mode || "1" },
 					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
 					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0",
-					suffix: '<font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font>'},
-					{ title: '例外端口', name:'koolproxy_bp_port',type:'text',style:'input_style', maxlen:20, value:dbus.koolproxy_bp_port ,suffix: '<font color="#FF0000">例：</font>&nbsp;&nbsp;<font color="#FF0000">【单端口】：80【多端口】：80,443</font>'},
+					suffix: '<lable id="readme_port"><font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font></lable>'},
+					{ title: '例外端口', name:'koolproxy_bp_port',type:'text',style:'input_style', maxlen:50, value:dbus.koolproxy_bp_port ,suffix: '<font color="#FF0000">例：</font><font color="#FF0000">【单端口】：80【多端口】：80,443</font>'},
 //					{ title: '开启Adblock Plus Host', name:'koolproxy_host',type:'checkbox',value: dbus.koolproxy_host == 1, suffix: '<lable id="_koolproxy_host_nu"></lable>' },
 					{ title: '插件自动重启', multi: [
 						{ name:'koolproxy_reboot',type:'select',options:[['1','定时'],['2','间隔'],['0','关闭']],value: dbus.koolproxy_reboot || "0", suffix: ' &nbsp;&nbsp;' },
