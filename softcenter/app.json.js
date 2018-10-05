@@ -503,15 +503,15 @@
             "version": "0.2"
         }, 
         {
-            "build_date": "2018-10-02_21:44:45", 
+            "build_date": "2018-10-06_00:28:51", 
             "changelog": "优化配置界面", 
             "description": "听说KP和软路由更搭哦~", 
             "home_url": "Module_koolproxy.asp", 
-            "md5": "6062f1d41beb4b79088472e1ca9a6143", 
+            "md5": "cb7e109906698e3bd947e54059d92ea6", 
             "name": "koolproxy", 
             "tar_url": "koolproxy/koolproxy.tar.gz", 
             "title": "koolproxy", 
-            "version": "3.8.3.2"
+            "version": "3.8.3.3"
         }, 
         {
             "build_date": "2017-10-09_22:23:58", 
