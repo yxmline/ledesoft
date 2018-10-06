@@ -61,7 +61,7 @@ start_koolproxy(){
 		[ "$koolproxy_mode" == "2" ] && echo_date 选择【带HTTPS的全局模式】
 		[ "$koolproxy_mode" == "3" ] && echo_date 选择【黑名单模式】
 		[ "$koolproxy_mode" == "4" ] && echo_date 选择【带HTTPS的黑名单模式】
-		[ "$koolproxy_mode" == "5" ] && echo_date 选择【全端口模式】
+#		[ "$koolproxy_mode" == "5" ] && echo_date 选择【全端口模式】
 		[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
 	else
 		[ "$koolproxy_base_mode" == "0" ] && echo_date 选择【不过滤】	
