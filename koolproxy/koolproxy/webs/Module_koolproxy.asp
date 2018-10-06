@@ -63,6 +63,7 @@ No part of this file may be used without permission.
 		}
 		kpacl.fieldValuesToData = function( row ) {
 			var f = fields.getAll( row );
+			//alert(dbus["koolproxy_portctrl_mode"]);
 			if (f[0].value){
 				return [ f[0].value, f[1].value, f[2].value, f[3].value ];
 			}else{
@@ -299,19 +300,20 @@ No part of this file may be used without permission.
 			var g = (E('_koolproxy_reboot').value == '2');
 //			var h = (E('_koolproxy_mode').value == '2');
 			var h = (E('_koolproxy_mode_enable').value == '0');
-			var s = (E('_koolproxy_mode_enable').value == '1');			
+			var s = (E('_koolproxy_mode_enable').value == '1');
 			var x = (E('_koolproxy_port').value == '1');
 //			var o = (E('_koolproxy_mode').value == '5');
 			var p = (E('_koolproxy_bp_port').value);
-			E('_koolproxy_mode_enable').disabled = !a;		
+
+			E('_koolproxy_mode_enable').disabled = !a;
+			E('_koolproxy_port').disabled = !a;			
 			E('_koolproxy_mode').disabled = !a;
 			E('_koolproxy_base_mode').disabled = !a;		
-			E('_koolproxy_port').disabled = !a
 //			E('_koolproxy_bp_port').disabled = !a;
 			E('_koolproxy_reboot').disabled = !a;
 			E('_download_cert').disabled = !a;
 			elem.display(PR('_koolproxy_mode'), s);
-			elem.display(PR('_koolproxy_base_mode'), h);			
+			elem.display(PR('_koolproxy_base_mode'), h);
 			elem.display('_koolproxy_reboot_hour', a && f);
 			elem.display('koolproxy_reboot_hour_suf', a && f);
 			elem.display('koolproxy_reboot_hour_pre', a && f);
@@ -320,7 +322,13 @@ No part of this file may be used without permission.
 			elem.display('koolproxy_reboot_inter_hour_pre', a && g);
 			elem.display('readme_port', x);
 //			elem.display(PR('_koolproxy_host'), h);
-//			elem.display(PR('_koolproxy_port'), h);
+			if (dbus["koolproxy_portctrl_mode"]=="1"){
+				var z = true;
+			}else{
+				var z = false;
+				x = false;
+			}
+			elem.display(PR('_koolproxy_port'), z);
 			elem.display(PR('_koolproxy_bp_port'), x);
 		}
 
@@ -387,7 +395,6 @@ No part of this file may be used without permission.
 			dbus.koolproxy_reboot = E('_koolproxy_reboot').value;
 			dbus.koolproxy_reboot_hour = E('_koolproxy_reboot_hour').value;
 			dbus.koolproxy_reboot_inter_hour = E('_koolproxy_reboot_inter_hour').value;
-//			dbus.koolproxy_acl_default = E('_koolproxy_acl_default').value;
 			dbus.koolproxy_oline_rules = E("_koolproxy_oline_rules").checked ? "1" : "0";
 			dbus.koolproxy_video_rules = E("_koolproxy_video_rules").checked ? "1" : "0";
 			dbus.koolproxy_easylist_rules = E("_koolproxy_easylist_rules").checked ? "1" : "0";
@@ -409,6 +416,11 @@ No part of this file may be used without permission.
 				dbus["koolproxy_acl_list"] = acllist;
 			}else{
 				dbus["koolproxy_acl_list"] = " ";
+			}
+			if(dbus["koolproxy_acl_list"].indexOf('<5')!=-1){
+				dbus.koolproxy_portctrl_mode = '1';
+			}else{
+				dbus.koolproxy_portctrl_mode = '0';
 			}
 			// post data
 			var id3 = parseInt(Math.random() * 100000000);
@@ -587,7 +599,7 @@ No part of this file may be used without permission.
 //					{ title: 'Koolproxy规则状态', text: '<font id="_koolproxy_rule_status" name=_koolproxy_status color="#1bbf35">正在获取规则状态...</font>' },
 					{ title: '开启进阶模式', name:'koolproxy_mode_enable',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_mode_enable || "0" },
 					{ title: '过滤模式', name:'koolproxy_base_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','黑名单模式']],value: dbus.koolproxy_base_mode || "1" },
-					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式'],['5','全端口模式']],value: dbus.koolproxy_mode || "1" },
+					{ title: '过滤模式', name:'koolproxy_mode',type:'select',options:[['0','不过滤'],['1','全局模式'],['2','带HTTPS的全局模式'],['3','黑名单模式'],['4','带HTTPS的黑名单模式']],value: dbus.koolproxy_mode || "1" },
 					{ title: '端口控制', name:'koolproxy_port',type:'select',options:[['0','关闭'],['1','开启']],value: dbus.koolproxy_port || "0",
 					suffix: '<lable id="readme_port"><font color="#FF0000">【端口控制】&nbsp;&nbsp;只有全端口模式下才生效</font></lable>'},
 					{ title: '例外端口', name:'koolproxy_bp_port',type:'text',style:'input_style', maxlen:50, value:dbus.koolproxy_bp_port ,suffix: '<font color="#FF0000">例：</font><font color="#FF0000">【单端口】：80【多端口】：80,443</font>'},
