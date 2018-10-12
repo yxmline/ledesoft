@@ -69,7 +69,7 @@ start_koolproxy(){
 		[ "$koolproxy_base_mode" == "2" ] && echo_date 选择【黑名单模式】
 		[ "$koolproxy_video_rules" == "1" -a "koolproxy_oline_rules" == "0" -a "$koolproxy_easylist_rules" == "0" -a "$koolproxy_abx_rules" == "0" -a "$koolproxy_fanboy_rules" == "0" ] && echo_date 选择【视频模式】
 	fi
-	cd $KP_DIR && koolproxy --mark -d
+	cd $KP_DIR && koolproxy -d --ttl 188 --ttlport 3001
 }
 
 stop_koolproxy(){
@@ -287,8 +287,9 @@ factor(){
 flush_nat(){
 	echo_date 移除nat规则...
 	cd /tmp
-	iptables -t nat -S | grep -E "KOOLPROXY|KP_HTTP|KP_HTTPS|KP_BLOCK_HTTP|KP_BLOCK_HTTPS|KP_ALL_PORT" | sed 's/-A/iptables -t nat -D/g'|sed 1,6d > clean.sh && chmod 777 clean.sh && ./clean.sh
+	iptables -t nat -S | grep -E "KOOLPROXY|KOOLPROXY_ACT|KP_HTTP|KP_HTTPS|KP_BLOCK_HTTP|KP_BLOCK_HTTPS|KP_ALL_PORT" | sed 's/-A/iptables -t nat -D/g'|sed 1,7d > clean.sh && chmod 777 clean.sh && ./clean.sh
 	iptables -t nat -X KOOLPROXY > /dev/null 2>&1
+	iptables -t nat -X KOOLPROXY_ACT > /dev/null 2>&1	
 	iptables -t nat -X KP_HTTP > /dev/null 2>&1
 	iptables -t nat -X KP_HTTPS > /dev/null 2>&1
 	iptables -t nat -X KP_BLOCK_HTTP > /dev/null 2>&1
@@ -345,25 +346,31 @@ load_nat(){
 	echo_date 写入iptables规则到nat表中...
 	# 创建KOOLPROXY nat rule
 	iptables -t nat -N KOOLPROXY
+	# 创建KOOLPROXY_ACT nat rule
+	iptables -t nat -N KOOLPROXY_ACT
+	# 匹配TTL走TTL Port
+	iptables -t nat -A KOOLPROXY_ACT -p tcp -m ttl --ttl-eq 188 -j REDIRECT --to 3001
+	# 不匹配TTL走正常Port
+	iptables -t nat -A KOOLPROXY_ACT -p tcp -j REDIRECT --to 3000
 	# 局域网地址不走KP
 	iptables -t nat -A KOOLPROXY -m set --match-set white_kp_list dst -j RETURN
 	# 生成对应CHAIN
 	iptables -t nat -N KP_HTTP
-	iptables -t nat -A KP_HTTP -p tcp -m multiport --dport 80 -j REDIRECT --to-ports 3000
+	iptables -t nat -A KP_HTTP -p tcp -m multiport --dport 80 -j KOOLPROXY_ACT
 	iptables -t nat -N KP_HTTPS
-	iptables -t nat -A KP_HTTPS -p tcp -m multiport --dport 80,443 -j REDIRECT --to-ports 3000
+	iptables -t nat -A KP_HTTPS -p tcp -m multiport --dport 80,443 -j KOOLPROXY_ACT
 	iptables -t nat -N KP_BLOCK_HTTP
-	iptables -t nat -A KP_BLOCK_HTTP -p tcp -m multiport --dport 80 -m set --match-set black_koolproxy dst -j REDIRECT --to-ports 3000
+	iptables -t nat -A KP_BLOCK_HTTP -p tcp -m multiport --dport 80 -m set --match-set black_koolproxy dst -j KOOLPROXY_ACT
 	iptables -t nat -N KP_BLOCK_HTTPS
-	iptables -t nat -A KP_BLOCK_HTTPS -p tcp -m multiport --dport 80,443 -m set --match-set black_koolproxy dst -j REDIRECT --to-ports 3000	
+	iptables -t nat -A KP_BLOCK_HTTPS -p tcp -m multiport --dport 80,443 -m set --match-set black_koolproxy dst -j KOOLPROXY_ACT	
 	iptables -t nat -N KP_ALL_PORT
-	#iptables -t nat -A KP_ALL_PORT -p tcp -j REDIRECT --to-ports 3000
+	#iptables -t nat -A KP_ALL_PORT -p tcp -j KOOLPROXY_ACT
 	# 端口控制 
 	if [ "$koolproxy_port" == "1" ]; then
 		echo_date 开启端口控制：【$koolproxy_bp_port】
-		iptables -t nat -A KP_ALL_PORT -p tcp -m multiport ! --dport $koolproxy_bp_port -m set --match-set kp_full_port dst -j REDIRECT --to-ports 3000		
+		iptables -t nat -A KP_ALL_PORT -p tcp -m multiport ! --dport $koolproxy_bp_port -m set --match-set kp_full_port dst -j KOOLPROXY_ACT		
 	else
-		iptables -t nat -A KP_ALL_PORT -p tcp -m set --match-set kp_full_port dst -j REDIRECT --to-ports 3000
+		iptables -t nat -A KP_ALL_PORT -p tcp -m set --match-set kp_full_port dst -j KOOLPROXY_ACT
 	fi
 	# 局域网控制
 	lan_acess_control
