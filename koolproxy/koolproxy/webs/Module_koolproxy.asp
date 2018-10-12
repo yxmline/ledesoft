@@ -304,7 +304,6 @@ No part of this file may be used without permission.
 			var x = (E('_koolproxy_port').value == '1');
 //			var o = (E('_koolproxy_mode').value == '5');
 			var p = (E('_koolproxy_bp_port').value);
-
 			E('_koolproxy_mode_enable').disabled = !a;
 			E('_koolproxy_port').disabled = !a;			
 			E('_koolproxy_mode').disabled = !a;
@@ -368,7 +367,7 @@ No part of this file may be used without permission.
 				cookie.set('adv_dhcpdns_' + whichone + '_vis', 1);
 			}
 		}
-		
+
 		function save(){
 			var KP = document.getElementById('_koolproxy_enable').checked==false;			
 			var R1 = document.getElementById('_koolproxy_oline_rules').checked==false;
@@ -637,16 +636,14 @@ No part of this file may be used without permission.
 			<br><hr>
 			<h4>使用手册</h4>
 			<div class="section" id="sesdiv_notes2">
-				<ul>
-					<li>过滤https站点广告需要为相应设备安装证书，并启用带HTTPS过滤的模式！</li>
-					<li>【全端口模式】是包括443和80端口以内的全部端口进行过滤，如果被过滤的设备开启这个，也需要安装证书！</li>
-					<li>需要自定义列表内没有的主机时，把【主机别名】留空，填写其它的即可！</li>
-					<li>访问控制面板中【ip地址】和【mac地址】至少一个不能为空！只有ip时匹配ip，只有mac时匹配mac，两个都有一起匹配！</li>
-					<li>在路由器下的设备，不管是电脑，还是移动设备，都可以在浏览器中输入<i><b>110.110.110.110</b></i>来下载证书。</i></li>
-					<li>如果想在多台装有koolroxy的路由设备上使用一个证书，请用本插件的证书备份功能，并上传到另一台路由。</li>
-					<li><font color="red">注意！【全端口模式】过滤效果牛逼和覆盖的范围更广，但却对设备的性能有非常高的要求，请根据自己的设备的情况进行选择！</font></li>
-					<li><font color="red">注意！如果使用全端口模式过滤导致一些端口出现问题，可以开启端口控制，进行例外端口排除！</font></li>					
-				</ul>
+				<li>过滤https站点广告需要为相应设备安装证书，并启用带HTTPS过滤的模式！</li>
+				<li>【全端口模式】是包括443和80端口以内的全部端口进行过滤，如果被过滤的设备开启这个，也需要安装证书！</li>
+				<li>需要自定义列表内没有的主机时，把【主机别名】留空，填写其它的即可！</li>
+				<li>访问控制面板中【ip地址】和【mac地址】至少一个不能为空！只有ip时匹配ip，只有mac时匹配mac，两个都有一起匹配！</li>
+				<li>在路由器下的设备，不管是电脑，还是移动设备，都可以在浏览器中输入<i><b>110.110.110.110</b></i>来下载证书。</i></li>
+				<li>如果想在多台装有koolroxy的路由设备上使用一个证书，请用本插件的证书备份功能，并上传到另一台路由。</li>
+				<li><font color="red">注意！【全端口模式】过滤效果牛逼和覆盖的范围更广，但却对设备的性能有非常高的要求，请根据自己的设备的情况进行选择！</font></li>
+				<li><font color="red">注意！如果使用全端口模式过滤导致一些端口出现问题，可以开启端口控制，进行例外端口排除！</font></li>
 			</div>
 			<br><hr>
 		</div>
@@ -696,19 +693,19 @@ No part of this file may be used without permission.
 					]}	
 				]);
 			</script>
+			<br><hr>
+			<h4>规则管理说明</h4>
+				<div class="section" id="sesdiv_notes2">
+				<li> KoolProxy推荐使用默认规则即可满足屏蔽的效果。</li>
+				<li><font color="green"> 【绿坝规则】</font>经过KoolProxy审核并通过兼容性测试的。</li>
+				<li> 第三方规则是由一些爱好者编写的，兼容性很难保证。</li>
+				<li><font color="red"> 注意！规则加载的越多产生冲突且不兼容的问题就会大大增加。</font></li>		
+				<li><font color="red"> 注意！我们无法去保证所有规则都能完美地在KoolProxy上面运行。</font></li>
+				<li><font color="red"> 注意！规则不是越多越好，建议第三方规则根据自己需要勾选一种即可。</font></li>
+				<li><font color="red"> 如果用户在选择规则上出现的风险，将由用户去承担，KoolProxy不承担任何责任。</font></li>
+			</div>
+			<br><hr>			
 		</div>
-	</div>
-	<div id="kp_rules_readme" class="box boxr6" style="margin-top: 15px;">
-	<div class="heading">规则管理说明： <a class="pull-right" data-toggle="tooltip" title="Hide/Show Notes" href="javascript:toggleVisibility('notes');"><span id="sesdivnotesshowhide"><i class="icon-chevron-up"></i></span></a></div>
-	<div class="section content" id="sesdivnotes" style="display:">
-			<li> KoolProxy推荐使用默认规则即可满足屏蔽的效果。</li>
-			<li><font color="green"> 【绿坝规则】</font>经过KoolProxy审核并通过兼容性测试的。</li>
-			<li> 第三方规则是由一些爱好者编写的，兼容性很难保证。</li>
-			<li><font color="red"> 注意！规则加载的越多产生冲突且不兼容的问题就会大大增加。</font></li>		
-			<li><font color="red"> 注意！我们无法去保证所有规则都能完美地在KoolProxy上面运行。</font></li>
-			<li><font color="red"> 注意！规则不是越多越好，建议第三方规则根据自己需要勾选一种即可。</font></li>
-			<li><font color="red"> 如果用户在选择规则上出现的风险，将由用户去承担，KoolProxy不承担任何责任。</font></li>
-	</div>
 	</div>
 	<div class="box boxr7">
 		<div class="heading">状态日志</div>
