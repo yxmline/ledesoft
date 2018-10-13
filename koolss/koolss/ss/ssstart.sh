@@ -16,7 +16,6 @@ game_on=`dbus list ss_acl_mode|cut -d "=" -f 2 | grep 3`
 #lan_ipaddr=`awk "/config interface 'lan'/,/^$/ {print $1}" /etc/config/network | grep ipaddr |awk '{print $3}' |sed "s/'//g"`
 lan_ipaddr=`uci get network.lan.ipaddr`
 lan_ipaddr_prefix=`uci get network.lan.ipaddr`
-ip_prefix_hex=`echo $lan_ipaddr | awk -F "." '{printf ("0x%02x", $1)} {printf ("%02x", $2)} {printf ("%02x", $3)} {printf ("00/0xffffff00")}'`
 LOCK_FILE=/var/lock/koolss.lock
 ISP_DNS1=`cat /tmp/resolv.conf.auto|cut -d " " -f 2|grep -v 0.0.0.0|grep -v 127.0.0.1|sed -n 2p`
 ISP_DNS2=`cat /tmp/resolv.conf.auto|cut -d " " -f 2|grep -v 0.0.0.0|grep -v 127.0.0.1|sed -n 3p`
@@ -1000,39 +999,19 @@ start_ss_redir(){
 # =======================================================================================================
 flush_nat(){
 	echo_date 尝试先清除已存在的iptables规则，防止重复添加
-	# flush rules and set if any
-	nat_indexs=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/SHADOWSOCKS/='|sort -r`
-	for nat_index in $nat_indexs
-	do
-		iptables -t nat -D PREROUTING $nat_index >/dev/null 2>&1
-	done	
-	#iptables -t nat -D PREROUTING -p tcp -j SHADOWSOCKS >/dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS > /dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS_EXT > /dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS_GFW > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS_GFW > /dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS_CHN > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS_CHN > /dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS_GAM > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS_GAM > /dev/null 2>&1
-	iptables -t nat -F SHADOWSOCKS_GLO > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS_GLO > /dev/null 2>&1
-
-	mangle_indexs=`iptables -nvL PREROUTING -t mangle |sed 1,2d | sed -n '/SHADOWSOCKS/='|sort -r`
-	for mangle_index in $mangle_indexs
-	do
-		iptables -t mangle -D PREROUTING $mangle_index >/dev/null 2>&1
-	done
-	#iptables -t mangle -D PREROUTING -p udp -j SHADOWSOCKS >/dev/null 2>&1
-	
-	iptables -t mangle -F SHADOWSOCKS >/dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS >/dev/null 2>&1
-	iptables -t mangle -F SHADOWSOCKS_GAM > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GAM > /dev/null 2>&1
-	iptables -t nat -D OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333 >/dev/null 2>&1
+	# flush iptables rules
 	iptables -t nat -F OUTPUT > /dev/null 2>&1
-	iptables -t nat -X SHADOWSOCKS_EXT > /dev/null 2>&1
-	
-	kp_mode=`/koolshare/bin/dbus get koolproxy_mode`
-	kp_enable=`iptables -t nat -L PREROUTING | grep KOOLPROXY |wc -l`
+ 	iptables -t nat -D PREROUTING -j SHADOWSOCKS > /dev/null 2>&1	
+	iptables -t nat -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS > /dev/null 2>&1
+ 	iptables -t mangle -D PREROUTING -j SHADOWSOCKS /dev/null 2>&1
+ 	iptables -t mangle -F SHADOWSOCKS /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS 2>/dev/null 2>&1
+	iptables -t mangle -F SHADOWSOCKS_GFW > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GFW > /dev/null 2>&1
+	iptables -t mangle -F SHADOWSOCKS_CHN > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_CHN > /dev/null 2>&1
+	iptables -t mangle -F SHADOWSOCKS_GAM > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GAM > /dev/null 2>&1
+	iptables -t mangle -F SHADOWSOCKS_GLO > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GLO > /dev/null 2>&1
+
 	chromecast_nu=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53"|awk '{print $1}'`
-	if [ "$kp_mode" != "2" ] || [ "$kp_enable" -eq 0 ]; then
-		iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
-	fi
+	[ `dbus get koolproxy_enable` -ne 1 ] && iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
 
 	#flush_ipset
 	echo_date 先清空已存在的ipset名单，防止重复添加
@@ -1134,7 +1113,7 @@ get_action_chain() {
 get_mode_name() {
 	case "$1" in
 		0)
-			echo "不通过SS"
+			echo "不通过代理"
 		;;
 		1)
 			echo "gfwlist模式"
@@ -1177,18 +1156,17 @@ lan_acess_control(){
 		for acl in $acl_nu
 		do
 			ipaddr=`dbus get ss_acl_ip_$acl`
-			ipaddr_hex=`dbus get ss_acl_ip_$acl | awk -F "." '{printf ("0x%02x", $1)} {printf ("%02x", $2)} {printf ("%02x", $3)} {printf ("%02x\n", $4)}'`
 			proxy_mode=`dbus get ss_acl_mode_$acl`
 			proxy_name=`dbus get ss_acl_name_$acl`
 			mac=`dbus get ss_acl_mac_$acl`
 			ports=`dbus get ss_acl_port_$acl`
 			ports_user=`dbus get ss_acl_port_user_$acl`
-			if [ "$ports" == "all" ];then
+			if [ "$ports" == "all" ]; then
 				ports=""
 				[ -n "$ipaddr" ] && [ -z "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【全部端口】模式为：$(get_mode_name $proxy_mode)
 				[ -z "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$mac】【全部端口】模式为：$(get_mode_name $proxy_mode)
 				[ -n "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【$mac】【全部端口】模式为：$(get_mode_name $proxy_mode)
-			elif [ "$ports" == "0" ];then
+			elif [ "$ports" == "0" ]; then
 				ports=$ports_user
 				[ -n "$ipaddr" ] && [ -z "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【$ports】模式为：$(get_mode_name $proxy_mode)
 				[ -z "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$mac】【$ports】模式为：$(get_mode_name $proxy_mode)
@@ -1198,26 +1176,9 @@ lan_acess_control(){
 				[ -z "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$mac】【$ports】模式为：$(get_mode_name $proxy_mode)
 				[ -n "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【$mac】【$ports】模式为：$(get_mode_name $proxy_mode)
 			fi
-			# acl in koolss for nat
-			iptables -t nat -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
+
 			# acl in koolss for mangle
-			if [ "$proxy_mode" == "3" ];then
-				iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
-			else
-				[ "$mangle" == "1" ] && iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp -j RETURN
-			fi
-			# acl in OUTPUT（used by koolproxy）
-			[ -z "$ipaddr" ] && {
-				lower_macaddr=`echo $mac | tr '[A-Z]' '[a-z]'`
-				ipaddr=`ip neigh show | grep $lower_macaddr | awk '{print $1}'`
-				[ -z "$ipaddr" ] && ipaddr=`cat /tmp/dhcp.leases |grep $lower_macaddr |awk '{print $3}'`
-				[ -z "$ipaddr" ] && {
-					dhcp_index=`uci show dhcp | grep $lower_macaddr |awk -F'.' '{print $2}'`
-					ipaddr=`uci -q get dhcp.$dhcp_index.ip`
-				}	
-				[ -n "$ipaddr" ] && ipaddr_hex=`echo -n $ipaddr | awk -F "." '{printf ("0x%02x", $1)} {printf ("%02x", $2)} {printf ("%02x", $3)} {printf ("%02x\n", $4)}'`
-			}
-			iptables -t nat -A SHADOWSOCKS_EXT -p tcp  $(factor $ports "-m multiport --dport") -m mark --mark "$ipaddr_hex" -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
+			iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 		done
 		if [ "$ss_acl_default_port" == "all" ];then
 			ss_acl_default_port="" 
@@ -1247,111 +1208,80 @@ apply_nat_rules(){
 		echo_date 使用chnroute分流...
 	fi
 	#----------------------BASIC RULES---------------------
-	echo_date 写入iptables规则到nat表中...
-	# 创建SHADOWSOCKS nat rule
-	iptables -t nat -N SHADOWSOCKS
-	# 扩展
-	iptables -t nat -N SHADOWSOCKS_EXT
+	echo_date 写入iptables规则到mangle表中...
+	# 创建SHADOWSOCKS mangle rule
+	iptables -t mangle -N SHADOWSOCKS
+	iptables -t mangle -A PREROUTING -j SHADOWSOCKS
 	# IP/cidr/白域名 白名单控制（不走ss） for SHADOWSOCKS
-	iptables -t nat -A SHADOWSOCKS -p tcp -m set --match-set white_list dst -j RETURN
-	# IP/cidr/白域名 白名单控制（不走ss） for SHADOWSOCKS_EXT
-	iptables -t nat -A SHADOWSOCKS_EXT -p tcp -m set --match-set white_list dst -j RETURN
+	iptables -t mangle -A SHADOWSOCKS -p tcp -m set --match-set white_list dst -j RETURN
 	#-----------------------FOR GLOABLE---------------------
-	# 创建gfwlist模式nat rule
-	iptables -t nat -N SHADOWSOCKS_GLO
-	# IP黑名单控制-gfwlist（走ss）
-	iptables -t nat -A SHADOWSOCKS_GLO -p tcp -j REDIRECT --to-ports 3333
+	# 创建全局模式mangle rule
+	iptables -t mangle -N SHADOWSOCKS_GLO
+	# 所有IP 全局模式（走ss）
+	iptables -t mangle -A SHADOWSOCKS_GLO -p tcp -j TTL --ttl-set 188
 	#-----------------------FOR GFWLIST---------------------
-	# 创建gfwlist模式nat rule
-	iptables -t nat -N SHADOWSOCKS_GFW
+	# 创建gfwlist模式mangle rule
+	iptables -t mangle -N SHADOWSOCKS_GFW
 	# IP/CIDR/黑域名 黑名单控制（走ss）
-	iptables -t nat -A SHADOWSOCKS_GFW -p tcp -m set --match-set black_list dst -j REDIRECT --to-ports 3333
+	iptables -t mangle -A SHADOWSOCKS_GFW -p tcp -m set --match-set black_list dst -j TTL --ttl-set 188
 	# IP黑名单控制-gfwlist（走ss）
-	iptables -t nat -A SHADOWSOCKS_GFW -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 3333
+	iptables -t mangle -A SHADOWSOCKS_GFW -p tcp -m set --match-set gfwlist dst -j TTL --ttl-set 188
 	#-----------------------FOR CHNMODE---------------------
-	# 创建大陆白名单模式nat rule
-	iptables -t nat -N SHADOWSOCKS_CHN
+	# 创建大陆白名单模式mangle rule
+	iptables -t mangle -N SHADOWSOCKS_CHN
 	# IP/CIDR/域名 黑名单控制（走ss）
-	iptables -t nat -A SHADOWSOCKS_CHN -p tcp -m set --match-set black_list dst -j REDIRECT --to-ports 3333
+	iptables -t mangle -A SHADOWSOCKS_CHN -p tcp -m set --match-set black_list dst -j TTL --ttl-set 188
 	# cidr黑名单控制-chnroute（走ss）
 	if [ "$ss_basic_bypass" == "2" ];then
-		iptables -t nat -A SHADOWSOCKS_CHN -p tcp -m geoip ! --destination-country CN -j REDIRECT --to-ports 3333
+		iptables -t mangle -A SHADOWSOCKS_CHN -p tcp -m geoip ! --destination-country CN -j TTL --ttl-set 188
 	else
-		iptables -t nat -A SHADOWSOCKS_CHN -p tcp -m set ! --match-set chnroute dst -j REDIRECT --to-ports 3333
+		iptables -t mangle -A SHADOWSOCKS_CHN -p tcp -m set ! --match-set chnroute dst -j TTL --ttl-set 188
 	fi
 	
 	#-----------------------FOR GAMEMODE---------------------
-	# 创建大陆白名单模式nat rule
-	iptables -t nat -N SHADOWSOCKS_GAM
+	# 创建游戏模式mangle rule
+	iptables -t mangle -N SHADOWSOCKS_GAM
 	# IP/CIDR/域名 黑名单控制（走ss）
-	iptables -t nat -A SHADOWSOCKS_GAM -p tcp -m set --match-set black_list dst -j REDIRECT --to-ports 3333
+	iptables -t mangle -A SHADOWSOCKS_GAM -p tcp -m set --match-set black_list dst -j TTL --ttl-set 188
 	# cidr黑名单控制-chnroute（走ss）
 	if [ "$ss_basic_bypass" == "2" ];then
-		iptables -t nat -A SHADOWSOCKS_GAM -p tcp -m geoip ! --destination-country CN -j REDIRECT --to-ports 3333
+		iptables -t mangle -A SHADOWSOCKS_GAM -p tcp -m geoip ! --destination-country CN -j TTL --ttl-set 188
 	else
-		iptables -t nat -A SHADOWSOCKS_GAM -p tcp -m set ! --match-set chnroute dst -j REDIRECT --to-ports 3333
+		iptables -t mangle -A SHADOWSOCKS_GAM -p tcp -m set ! --match-set chnroute dst -j TTL --ttl-set 188
 	fi
-	#[ "$mangle" == "1" ] && load_tproxy
-	[ "$mangle" == "1" ] && ip rule add fwmark 0x07 table 310 pref 789
-	[ "$mangle" == "1" ] && ip route add local 0.0.0.0/0 dev lo table 310
-	# 创建游戏模式udp rule
-	[ "$mangle" == "1" ] && iptables -t mangle -N SHADOWSOCKS
-	# IP/cidr/白域名 白名单控制（不走ss）
-	[ "$mangle" == "1" ] && iptables -t mangle -A SHADOWSOCKS -p udp -m set --match-set white_list dst -j RETURN
-	# 创建游戏模式udp rule
-	[ "$mangle" == "1" ] && iptables -t mangle -N SHADOWSOCKS_GAM
-	# IP/CIDR/域名 黑名单控制（走ss）
-	[ "$mangle" == "1" ] && iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set --match-set black_list dst -j TPROXY --on-port 3333 --tproxy-mark 0x07
+	
+	# 游戏模式UDP
+	ip rule add fwmark 0x07 table 310 pref 789
+	ip route add local 0.0.0.0/0 dev lo table 310
+	iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set --match-set black_list dst -j TPROXY --on-port 3333 --tproxy-mark 0x07
 	# cidr黑名单控制-chnroute（走ss）
-	if [ "$mangle" == "1" ];then
-		if [ "$ss_basic_bypass" == "2" ];then
-			iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m geoip ! --destination-country CN -j TPROXY --on-port 3333 --tproxy-mark 0x07
-		else
-			iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set ! --match-set chnroute dst -j TPROXY --on-port 3333 --tproxy-mark 0x07
-		fi
+	if [ "$ss_basic_bypass" == "2" ];then
+		iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m geoip ! --destination-country CN -j TPROXY --on-port 3333 --tproxy-mark 0x07
+	else
+		iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set ! --match-set chnroute dst -j TPROXY --on-port 3333 --tproxy-mark 0x07
 	fi
 	#-------------------------------------------------------
 	# 局域网黑名单（不走ss）/局域网黑名单（走ss）
 	lan_acess_control
-	#-----------------------FOR ROUTER---------------------
+	# 其余主机默认模式
+	iptables -t mangle -A SHADOWSOCKS -j $(get_action_chain $ss_acl_default_mode)
+	# 重定所有流量到透明代理端口
+	iptables -t nat -N SHADOWSOCKS
+	iptables -t nat -A SHADOWSOCKS -p tcp -m ttl --ttl-eq 188 -j REDIRECT --to 3333
+	#获取默认规则行号
+	BL_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^BLACKLIST/='`
+	[ -n "$BL_INDEX" ] && let RULE_INDEX=$BL_INDEX+1
+	KP_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^KOOLPROXY/='`
+	[ -n "$KP_INDEX" ] && let RULE_INDEX=$KP_INDEX+1
+	#确保添加到默认规则之后
+	iptables -t nat -I PREROUTING $RULE_INDEX -j SHADOWSOCKS
 	# router itself
+	iptables -t nat -I OUTPUT -j SHADOWSOCKS
 	iptables -t nat -A OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333
-	iptables -t nat -A OUTPUT -p tcp -m mark --mark $ip_prefix_hex -j SHADOWSOCKS_EXT
-	#[ "$ss_basic_mode" != "4" ] && iptables -t nat -A OUTPUT -p tcp -m ttl --ttl-eq 160 -j SHADOWSOCKS_EXT
-	
-	# 把最后剩余流量重定向到相应模式的nat表中对对应的主模式的链
-	
-	iptables -t nat -A SHADOWSOCKS -p tcp $(factor $ss_acl_default_port "-m multiport --dport") -j $(get_action_chain $ss_acl_default_mode)
-	# iptables -t nat -A OUTPUT -p tcp $(factor $ss_acl_default_port "-m multiport --dport") -m ttl --ttl-eq 160 -j $(get_action_chain $ss_acl_default_mode)
-	iptables -t nat -A SHADOWSOCKS_EXT -p tcp $(factor $ss_acl_default_port "-m multiport --dport") -j $(get_action_chain $ss_acl_default_mode)
-	# 如果是主模式游戏模式，则把SHADOWSOCKS链中剩余udp流量转发给SHADOWSOCKS_GAM链
-	# 如果主模式不是游戏模式，则不需要把SHADOWSOCKS链中剩余udp流量转发给SHADOWSOCKS_GAM，不然会造成其他模式主机的udp也走游戏模式
-	[ "$mangle" == "1" ] && ss_acl_default_mode=3
-	[ "$ss_basic_mode" == "3" ] && iptables -t mangle -A SHADOWSOCKS -p udp -j $(get_action_chain $ss_acl_default_mode)
-	# 重定所有流量到 SHADOWSOCKS
-	KP_INDEX=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/KOOLPROXY/='|head -n1`
-	if [ -n "$KP_INDEX" ]; then
-		let KP_INDEX+=1
-		#开启了KP，这把规则放在KOOLPROXY下面
-		iptables -t nat -I PREROUTING $KP_INDEX -p tcp -j SHADOWSOCKS
-	else
-		#KP没有运行，确保添加到prerouting_rule规则之后
-		PR_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^prerouting_rule/='`
-		if [ -z "$PR_INDEX" ]; then
-			PR_INDEX=1
-		else
-			let PR_INDEX+=1
-		fi	
-		iptables -t nat -I PREROUTING $PR_INDEX -p tcp -j SHADOWSOCKS
-	fi
-	[ "$mangle" == "1" ] && iptables -t mangle -I PREROUTING 1 -p udp -j SHADOWSOCKS
-}
 
 chromecast(){
 	LOG1=开启chromecast功能（DNS劫持功能）
 	LOG2=chromecast功能未开启，建议开启~
-	kp_mode=`/koolshare/bin/dbus get koolproxy_mode`
-	kp_enable=`iptables -t nat -L PREROUTING | grep KOOLPROXY |wc -l`
 	chromecast_nu=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53"|awk '{print $1}'`
 	is_right_lanip=`iptables -t nat -L PREROUTING -v -n --line-numbers|grep "dpt:53" |grep "$lan_ipaddr"`
 	if [ "$ss_basic_chromecast" == "1" ];then
@@ -1366,11 +1296,6 @@ chromecast(){
 			else
 				echo_date DNS劫持规则已经添加，跳过~
 			fi
-		fi
-	else
-		if [ "$kp_mode" != "2" ] || [ "$kp_enable" -eq 0 ]; then
-			iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
-			echo_date $LOG2
 		fi
 	fi
 }
@@ -1454,14 +1379,6 @@ get_status(){
 	echo ------------------------------------
 	ps -l|grep $PPID|grep -v grep
 	echo ------------------------------------
-	
-	#iptables -nvL PREROUTING -t nat
-	#iptables -nvL SHADOWSOCKS -t nat
-	#iptables -nvL SHADOWSOCKS_EXT -t nat
-	#iptables -nvL SHADOWSOCKS_GFW -t nat
-	#iptables -nvL SHADOWSOCKS_CHN -t nat
-	#iptables -nvL SHADOWSOCKS_GAM -t nat
-	#iptables -nvL SHADOWSOCKS_GLO -t nat
 }
 
 restart_by_fw(){
