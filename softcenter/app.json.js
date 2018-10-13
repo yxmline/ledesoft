@@ -295,15 +295,15 @@
             "version": "1.1.5"
         }, 
         {
-            "build_date": "2018-05-28_13:37:56", 
-            "changelog": "修复UDPblocked", 
+            "build_date": "2018-10-14_00:34:57", 
+            "changelog": "优化iptables", 
             "description": "小宝开发的游戏加速V2", 
             "home_url": "Module_koolgame.asp", 
-            "md5": "bf877e1239664d8e62816cccc794e68d", 
+            "md5": "667d9e5f5f64f363c9528f6cbd41c15a", 
             "name": "koolgame", 
             "tar_url": "koolgame/koolgame.tar.gz", 
             "title": "koolgame 游戏加速", 
-            "version": "1.0.4"
+            "version": "1.0.5"
         }, 
         {
             "build_date": "2018-08-10_10:46:43", 
