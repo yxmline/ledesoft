@@ -99,15 +99,15 @@
             "version": "0.1"
         }, 
         {
-            "build_date": "2018-09-16_18:41:49", 
-            "changelog": "修复规则更新", 
+            "build_date": "2018-10-14_00:32:18", 
+            "changelog": "优化iptables", 
             "description": "轻松科学上网~", 
             "home_url": "Module_koolss.asp", 
-            "md5": "a21f5111bf6f88adf21e8aa3d266166b", 
+            "md5": "c9dc3902433cca9c3d205535be5e9df9", 
             "name": "koolss", 
             "tar_url": "koolss/koolss.tar.gz", 
             "title": "科学上网插件", 
-            "version": "2.1.2"
+            "version": "2.1.3"
         }, 
         {
             "build_date": "2018-05-02_15:06:09", 

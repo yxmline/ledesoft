@@ -1,9 +1,9 @@
 {
-"version":"2.1.2",
-"md5":"a21f5111bf6f88adf21e8aa3d266166b",
+"version":"2.1.3",
+"md5":"c9dc3902433cca9c3d205535be5e9df9",
 "home_url":"Module_koolss.asp",
 "title":"科学上网插件",
 "description":"轻松科学上网~",
-"changelog":"修复规则更新",
-"build_date":"2018-09-16_18:41:49"
+"changelog":"优化iptables",
+"build_date":"2018-10-14_00:32:18"
 }

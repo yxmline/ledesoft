@@ -1,11 +1,11 @@
 #!/bin/sh
 
 MODULE=koolss
-VERSION=`cat koolss/ss/version`
+VERSION="2.1.3"
 TITLE=科学上网插件
 DESCRIPTION="轻松科学上网~"
 HOME_URL=Module_koolss.asp
-CHANGELOG="修复规则更新"
+CHANGELOG="优化iptables"
 
 # Check and include base
 DIR="$( cd "$( dirname "$BASH_SOURCE[0]" )" && pwd )"
