@@ -837,6 +837,8 @@ create_dnsmasq_conf(){
 	echo "ipset=/.raw.githubusercontent.com/router" >> /tmp/wblist.conf
 	echo "server=/.apnic.net/127.0.0.1#7913" >> /tmp/wblist.conf
 	echo "ipset=/.apnic.net/router" >> /tmp/wblist.conf
+	echo "server=/.openwrt.org/127.0.0.1#7913" >> /tmp/wblist.conf
+	echo "ipset=/.openwrt.org/router" >> /tmp/wblist.conf		
 	# append white domain list,not through ss
 	wanwhitedomain=$(echo $ss_wan_white_domain | base64_decode)
 	if [ -n "$ss_wan_white_domain" ];then
@@ -1003,8 +1005,8 @@ flush_nat(){
 	iptables -t nat -F OUTPUT > /dev/null 2>&1
  	iptables -t nat -D PREROUTING -j SHADOWSOCKS > /dev/null 2>&1	
 	iptables -t nat -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS > /dev/null 2>&1
- 	iptables -t mangle -D PREROUTING -j SHADOWSOCKS /dev/null 2>&1
- 	iptables -t mangle -F SHADOWSOCKS /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS 2>/dev/null 2>&1
+ 	iptables -t mangle -D PREROUTING -j SHADOWSOCKS > /dev/null 2>&1
+ 	iptables -t mangle -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_GFW > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GFW > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_CHN > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_CHN > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_GAM > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GAM > /dev/null 2>&1
@@ -1278,6 +1280,7 @@ apply_nat_rules(){
 	# router itself
 	iptables -t nat -I OUTPUT -j SHADOWSOCKS
 	iptables -t nat -A OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333
+}
 
 chromecast(){
 	LOG1=开启chromecast功能（DNS劫持功能）
