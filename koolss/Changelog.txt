@@ -1,5 +1,8 @@
 Koolshare LEDE-X64 shadowsocks Changelog
 ==========================================
+2.1.5
+   - fix	修复因为适配ttl模式导致的一系列问题
+
 2.1.2
    - fix	修复规则更新
 

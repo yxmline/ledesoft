@@ -1003,9 +1003,17 @@ flush_nat(){
 	echo_date 尝试先清除已存在的iptables规则，防止重复添加
 	# flush iptables rules
 	iptables -t nat -F OUTPUT > /dev/null 2>&1
- 	iptables -t nat -D PREROUTING -j SHADOWSOCKS > /dev/null 2>&1	
+	nat_indexs=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/SHADOWSOCKS/='|sort -r`
+	for nat_index in $nat_indexs
+	do
+		iptables -t nat -D PREROUTING $nat_index >/dev/null 2>&1
+	done
 	iptables -t nat -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t nat -X SHADOWSOCKS > /dev/null 2>&1
- 	iptables -t mangle -D PREROUTING -j SHADOWSOCKS > /dev/null 2>&1
+	mangle_indexs=`iptables -nvL PREROUTING -t mangle |sed 1,2d | sed -n '/SHADOWSOCKS/='|sort -r`
+	for mangle_index in $mangle_indexs
+	do
+		iptables -t mangle -D PREROUTING $mangle_index >/dev/null 2>&1
+	done
  	iptables -t mangle -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_GFW > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GFW > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_CHN > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_CHN > /dev/null 2>&1
@@ -1181,6 +1189,7 @@ lan_acess_control(){
 
 			# acl in koolss for mangle
 			iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
+			[ "$proxy_mode" == "3" ] && iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 		done
 		if [ "$ss_acl_default_port" == "all" ];then
 			ss_acl_default_port="" 
@@ -1215,7 +1224,7 @@ apply_nat_rules(){
 	iptables -t mangle -N SHADOWSOCKS
 	iptables -t mangle -A PREROUTING -j SHADOWSOCKS
 	# IP/cidr/白域名 白名单控制（不走ss） for SHADOWSOCKS
-	iptables -t mangle -A SHADOWSOCKS -p tcp -m set --match-set white_list dst -j RETURN
+	iptables -t mangle -A SHADOWSOCKS -m set --match-set white_list dst -j RETURN
 	#-----------------------FOR GLOABLE---------------------
 	# 创建全局模式mangle rule
 	iptables -t mangle -N SHADOWSOCKS_GLO
@@ -1270,13 +1279,22 @@ apply_nat_rules(){
 	# 重定所有流量到透明代理端口
 	iptables -t nat -N SHADOWSOCKS
 	iptables -t nat -A SHADOWSOCKS -p tcp -m ttl --ttl-eq 188 -j REDIRECT --to 3333
-	#获取默认规则行号
-	BL_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^BLACKLIST/='`
-	[ -n "$BL_INDEX" ] && let RULE_INDEX=$BL_INDEX+1
-	KP_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^KOOLPROXY/='`
-	[ -n "$KP_INDEX" ] && let RULE_INDEX=$KP_INDEX+1
-	#确保添加到默认规则之后
-	iptables -t nat -I PREROUTING $RULE_INDEX -j SHADOWSOCKS
+	# 重定所有流量到 SHADOWSOCKS
+	KP_INDEX=`iptables -nvL PREROUTING -t nat |sed 1,2d | sed -n '/KOOLPROXY/='|head -n1`
+	if [ -n "$KP_INDEX" ]; then
+		let KP_INDEX+=1
+		#开启了KP，这把规则放在KOOLPROXY下面
+		iptables -t nat -I PREROUTING $KP_INDEX -p tcp -j SHADOWSOCKS
+	else
+		#KP没有运行，确保添加到prerouting_rule规则之后
+		PR_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^prerouting_rule/='`
+		if [ -z "$PR_INDEX" ]; then
+			PR_INDEX=1
+		else
+			let PR_INDEX+=1
+		fi	
+		iptables -t nat -I PREROUTING $PR_INDEX -p tcp -j SHADOWSOCKS
+	fi
 	# router itself
 	iptables -t nat -I OUTPUT -j SHADOWSOCKS
 	iptables -t nat -A OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333
@@ -1479,3 +1497,4 @@ lb_restart)
 	restart_by_fw > /tmp/upload/ss_log.txt
 	;;
 esac
+
