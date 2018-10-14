@@ -4,6 +4,8 @@ source $KSROOT/scripts/base.sh
 eval `dbus export kms`
 
 mkdir -p $KSROOT/init.d
+mkdir -p $KSROOT/etc
+mkdir -p $KSROOT/etc/vlmcsd
 mkdir -p /tmp/upload
 
 # stop kms first
@@ -18,9 +20,10 @@ cp -rf /tmp/kms/scripts/* $KSROOT/scripts/
 cp -rf /tmp/kms/bin/* $KSROOT/bin/
 cp -rf /tmp/kms/webs/* $KSROOT/webs/
 cp -rf /tmp/kms/init.d/* $KSROOT/init.d/
+cp -rf /tmp/kms/etc/vlmcsd/* $KSROOT/etc/vlmcsd/
 chmod +x $KSROOT/scripts/kms*
 chmod +x $KSROOT/bin/vlmcsd
-
+touch $KSROOT/etc/vlmcsd/vlmcsd.pid
 # make some links
 [ ! -L "/etc/rc.d/S97kms.sh" ] && ln -sf $KSROOT/init.d/S97kms.sh /etc/rc.d/S97kms.sh
 

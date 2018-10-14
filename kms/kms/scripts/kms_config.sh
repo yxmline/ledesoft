@@ -6,7 +6,7 @@ eval `dbus export kms`
 CONFIG_FILE=/tmp/dnsmasq.d/kms.conf
 
 start_kms(){
-	$KSROOT/bin/vlmcsd
+	$KSROOT/bin/vlmcsd -D -j $KSROOT/etc/vlmcsd/vlmcsd_user.kmd -p $KSROOT/etc/vlmcsd/vlmcsd.pid -l syslog &
 	echo "srv-host=_vlmcs._tcp.lan,`uname -n`.lan,1688,0,100" > $CONFIG_FILE
 	/etc/init.d/dnsmasq restart
 	[ ! -L "/etc/rc.d/S97kms.sh" ] && ln -sf $KSROOT/init.d/S97kms.sh /etc/rc.d/S97kms.sh

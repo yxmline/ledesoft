@@ -16,6 +16,7 @@ done
 
 # remove files
 rm -rf $KSROOT/bin/vlmcsd
+rm -rf $KSROOT/etc
 rm -rf $KSROOT/webs/res/icon-kms*
 rm -rf $KSROOT/scripts/kms*
 rm -rf $KSROOT/webs/Module_kms.asp
