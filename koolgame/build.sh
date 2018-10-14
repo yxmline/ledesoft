@@ -1,11 +1,11 @@
 #!/bin/sh
 
 MODULE="koolgame"
-VERSION="1.0.6"
+VERSION="1.0.7"
 TITLE="koolgame 游戏加速"
 DESCRIPTION="小宝开发的游戏加速V2"
 HOME_URL="Module_koolgame.asp"
-CHANGELOG="修复BUG"
+CHANGELOG="修复TTL"
 
 # Check and include base
 DIR="$( cd "$( dirname "$BASH_SOURCE[0]" )" && pwd )"
