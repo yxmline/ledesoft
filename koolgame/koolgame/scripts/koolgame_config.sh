@@ -153,6 +153,8 @@ create_dnsmasq_conf(){
 	echo "ipset=/.raw.githubusercontent.com/router" >> /tmp/wblist.conf
 	echo "server=/.apnic.net/127.0.0.1#7913" >> /tmp/wblist.conf
 	echo "ipset=/.apnic.net/router" >> /tmp/wblist.conf
+	echo "server=/.openwrt.org/127.0.0.1#7913" >> /tmp/wblist.conf
+	echo "ipset=/.openwrt.org/router" >> /tmp/wblist.conf	
 	# append white domain list,not through koolgame
 	wanwhitedomain=$(echo $koolgame_wan_white_domain | base64_decode)
 	if [ -n "$koolgame_wan_white_domain" ];then
@@ -248,13 +250,13 @@ start_koolgame(){
 flush_nat(){
 	echo_date 尝试先清除已存在的iptables规则，防止重复添加
 	# flush rules and set if any
-	iptables -t nat -F OUTPUT > /dev/null 2>&1	
+	iptables -t nat -F OUTPUT >/dev/null 2>&1	
 	iptables -t nat -D PREROUTING -p tcp -j KOOLGAME >/dev/null 2>&1
 	iptables -t nat -F KOOLGAME	>/dev/null 2>&1 && iptables -t nat -X KOOLGAME >/dev/null 2>&1
 	sleep 1
 	iptables -t mangle -D PREROUTING -p udp -j KOOLGAME >/dev/null 2>&1
 	iptables -t mangle -F KOOLGAME >/dev/null 2>&1 && iptables -t mangle -X KOOLGAME >/dev/null 2>&1
-	iptables -t mangle -F KOOLGAME_GAM > /dev/null 2>&1 && iptables -t mangle -X KOOLGAME_GAM > /dev/null 2>&1
+	iptables -t mangle -F KOOLGAME_GAM >/dev/null 2>&1 && iptables -t mangle -X KOOLGAME_GAM >/dev/null 2>&1
 
 	# flush chromecast rule
 	ss_chromecast=`dbus get ss_basic_chromecast`
