@@ -1014,7 +1014,8 @@ flush_nat(){
 	do
 		iptables -t mangle -D PREROUTING $mangle_index >/dev/null 2>&1
 	done
- 	iptables -t mangle -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS > /dev/null 2>&1
+	
+	iptables -t mangle -F SHADOWSOCKS > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_GFW > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GFW > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_CHN > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_CHN > /dev/null 2>&1
 	iptables -t mangle -F SHADOWSOCKS_GAM > /dev/null 2>&1 && iptables -t mangle -X SHADOWSOCKS_GAM > /dev/null 2>&1
@@ -1190,6 +1191,7 @@ lan_acess_control(){
 			# acl in koolss for mangle
 			iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 			[ "$proxy_mode" == "3" ] && iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
+			[ `dbus get ss_acl_default_mode` == "3" ] && iptables -t mangle -A SHADOWSOCKS $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp $(factor $ports "-m multiport --dport") -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 		done
 		if [ "$ss_acl_default_port" == "all" ];then
 			ss_acl_default_port="" 
