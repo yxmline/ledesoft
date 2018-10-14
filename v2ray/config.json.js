@@ -1,9 +1,9 @@
 {
-"version":"1.3",
-"md5":"9bf1020430399e7d0c5c9812802a6d98",
+"version":"1.4",
+"md5":"311e547ca7c47a31cd71db4fc8bf252c",
 "home_url":"Module_v2ray.asp",
 "title":"V2Ray",
 "description":"模块化的代理软件包",
-"changelog":"修复二进制升级",
-"build_date":"2018-10-14_15:38:26"
+"changelog":"修复iptables重复加载",
+"build_date":"2018-10-15_00:26:40"
 }

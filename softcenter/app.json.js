@@ -415,15 +415,15 @@
             "version": "0.4"
         }, 
         {
-            "build_date": "2018-10-14_15:38:26", 
-            "changelog": "修复二进制升级", 
+            "build_date": "2018-10-15_00:26:40", 
+            "changelog": "修复iptables重复加载", 
             "description": "模块化的代理软件包", 
             "home_url": "Module_v2ray.asp", 
-            "md5": "9bf1020430399e7d0c5c9812802a6d98", 
+            "md5": "311e547ca7c47a31cd71db4fc8bf252c", 
             "name": "v2ray", 
             "tar_url": "v2ray/v2ray.tar.gz", 
             "title": "V2Ray", 
-            "version": "1.3"
+            "version": "1.4"
         }, 
         {
             "build_date": "2018-09-23_18:26:03", 

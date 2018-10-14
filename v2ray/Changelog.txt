@@ -1,5 +1,8 @@
 Koolshare OpenWRT/LEDE V2ray plugin Changelog
 ===========================================
+1.4
+   - fix	修复iptables规则重复加载；
+
 0.8
    - update	更新v2ray二进制到最新：V3.4；
    - fix	修复规则更新的问题；
