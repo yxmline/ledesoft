@@ -251,10 +251,23 @@ flush_nat(){
 	echo_date 尝试先清除已存在的iptables规则，防止重复添加
 	# flush rules and set if any
 	iptables -t nat -F OUTPUT >/dev/null 2>&1	
-	iptables -t nat -D PREROUTING -p tcp -j KOOLGAME >/dev/null 2>&1
+	ip_nat_exist=`iptables -t nat -L PREROUTING | grep -c KOOLGAME`
+	ip_mangle_exist=`iptables -t mangle -L PREROUTING | grep -c KOOLGAME`
+	if [ -n "$ip_nat_exist" ]; then
+		for i in `seq $ip_nat_exist`
+		do
+			iptables -t nat -D PREROUTING -p tcp -j KOOLGAME >/dev/null 2>&1
+		done
+	fi
+
+	if [ -n "$ip_mangle_exist" ]; then
+		for i in `seq $ip_mangle_exist`
+		do
+			iptables -t mangle -D PREROUTING -p udp -j KOOLGAME >/dev/null 2>&1
+		done
+	fi
+
 	iptables -t nat -F KOOLGAME	>/dev/null 2>&1 && iptables -t nat -X KOOLGAME >/dev/null 2>&1
-	sleep 1
-	iptables -t mangle -D PREROUTING -p udp -j KOOLGAME >/dev/null 2>&1
 	iptables -t mangle -F KOOLGAME >/dev/null 2>&1 && iptables -t mangle -X KOOLGAME >/dev/null 2>&1
 	iptables -t mangle -F KOOLGAME_GAM >/dev/null 2>&1 && iptables -t mangle -X KOOLGAME_GAM >/dev/null 2>&1
 
@@ -398,6 +411,7 @@ lan_acess_control(){
 			[ -n "$ipaddr" ] && [ -n "$mac" ] && echo_date 加载ACL规则：【$ipaddr】【$mac】模式为：$(get_mode_name $proxy_mode)
 			# acl magic happens here
 			iptables -t mangle -A KOOLGAME $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p udp -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
+			iptables -t mangle -A KOOLGAME $(factor $ipaddr "-s") $(factor $mac "-m mac --mac-source") -p tcp -$(get_jump_mode $proxy_mode) $(get_action_chain $proxy_mode)
 		done
 		echo_date 加载ACL规则：其余主机模式为：$(get_mode_name $koolgame_acl_default_mode)
 	else
@@ -412,7 +426,7 @@ apply_nat_rules(){
 	# 创建KOOLGAME mangle rule
 	iptables -t mangle -N KOOLGAME
 	# IP/cidr/白域名 白名单控制（不走koolgame）
-	iptables -t mangle -A KOOLGAME -p tcp -m set --match-set white_list dst -j RETURN
+	iptables -t mangle -A KOOLGAME -m set --match-set white_list dst -j RETURN
 	#-----------------------FOR GAMEMODE---------------------
 	# 创建游戏模式udp rule
 	iptables -t mangle -N KOOLGAME_GAM
@@ -443,7 +457,7 @@ apply_nat_rules(){
 	iptables -t nat -N KOOLGAME
 	iptables -t nat -A KOOLGAME -p tcp -m ttl --ttl-eq 188 -j REDIRECT --to 3333
 	#获取默认规则行号
-	BL_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^BLACKLIST/='`
+	PR_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^prerouting_rule/='`
 	[ -n "$BL_INDEX" ] && let RULE_INDEX=$BL_INDEX+1
 	KP_INDEX=`iptables -t nat -L PREROUTING|tail -n +3|sed -n -e '/^KOOLPROXY/='`
 	[ -n "$KP_INDEX" ] && let RULE_INDEX=$KP_INDEX+1
@@ -505,9 +519,6 @@ get_status(){
 	ps -l|grep $PPID|grep -v grep
 	echo ------------------------------------
 	iptables -nvL PREROUTING -t nat
-	#iptables -nvL KOOLGAME -t nat
-	#iptables -nvL KOOLGAME_EXT -t nat
-	#iptables -nvL KOOLGAME_GAM -t nat
 }
 
 detect_ss(){
