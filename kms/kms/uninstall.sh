@@ -16,6 +16,8 @@ done
 
 # remove files
 rm -rf $KSROOT/bin/vlmcsd
+rm -rf $KSROOT/bin/vlmcs
+rm -rf $KSROOT/bin/vlmcsdm
 rm -rf $KSROOT/etc
 rm -rf $KSROOT/webs/res/icon-kms*
 rm -rf $KSROOT/scripts/kms*

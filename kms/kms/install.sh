@@ -23,6 +23,8 @@ cp -rf /tmp/kms/init.d/* $KSROOT/init.d/
 cp -rf /tmp/kms/etc/vlmcsd/* $KSROOT/etc/vlmcsd/
 chmod +x $KSROOT/scripts/kms*
 chmod +x $KSROOT/bin/vlmcsd
+chmod +x $KSROOT/bin/vlmcs
+chmod +x $KSROOT/bin/vlmcsdm
 touch $KSROOT/etc/vlmcsd/vlmcsd.pid
 # make some links
 [ ! -L "/etc/rc.d/S97kms.sh" ] && ln -sf $KSROOT/init.d/S97kms.sh /etc/rc.d/S97kms.sh
